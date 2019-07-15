@@ -1,0 +1,30 @@
+img {
+    width: 150px;
+    height: 150px;
+}
+
+img.avatar {
+    margin-top: -50%;
+    border-radius: 100%;
+    box-shadow: 0 5px 10px rgba(0,0,0,.1);
+}
+
+h1 {
+    margin-top:10px;
+    margin-bottom: 0px;
+    color:black;
+    font-size: 24px;
+}
+
+span.bio {
+    font-size: 14px;
+    color: gray;
+}
+
+div.overview-card {
+    background-color: whitesmoke;
+    box-shadow: 0 10px 20px rgba(0,0,0,.6);
+    padding: 15px;
+    border-radius: 5px;
+    margin: 50px 0;
+}
