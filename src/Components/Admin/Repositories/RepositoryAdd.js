@@ -2,6 +2,7 @@ import React, {Component} from 'react'
 import gql from 'graphql-tag'
 import {Input,Form,Header, Grid, Segment} from 'semantic-ui-react';
 import {Mutation} from 'react-apollo' 
+import {Formik} from 'formik'
 
 const CREATE_REPOSITORY =
 gql`mutation ($repoData: CreateRepositoryInput!) {
@@ -25,54 +26,33 @@ gql`mutation ($repoData: CreateRepositoryInput!) {
 `  
 
 const options = [
-    { key: 'm', text: 'private', value: 'PRIVATE' },
-    { key: 'f', text: 'public', value: 'PUBLIC' },
-    { key: 'o', text: 'internal', value: 'INTERNAL' },
-  ]
+  { key: 'm', text: 'private', value: 'PRIVATE' },
+  { key: 'f', text: 'public', value: 'PUBLIC' },
+  { key: 'o', text: 'internal', value: 'INTERNAL' },
+]
+
+const optimisticResponse = (values) => ({
+  createRepository: {
+    repository: {
+      name: values.name + " optimisitc",
+      createdAt: new Date(),
+      description: values.description,
+      repositoryTopics: {
+        edges: [],
+        __typename: "RepositoryTopicConnection"
+      },
+      __typename: "Repository",
+    },
+    __typename: "CreateRepositoryPayload",
+  },
+  __typename: "Mutation"
+})
 
 export default class RepositoryAdd extends Component {
-    getInitialState() {
-        return ({
-            "repoData": {
-                "name": "",
-                "visibility": "PRIVATE",
-                "description": ""
-            }
-        })
-    }
-
-    constructor(props) {
-        super(props);
-        this.state = this.getInitialState()
-    }
-
-    handleChange = (e, {name, value}) => {
-        this.setState({
-            repoData: {
-                ...this.state.repoData,
-                [name]: value
-            }
-        })
-    }
-    handleSubmit(mutate, {query, variables}) {
+    handleSubmit(values, mutate, {query, variables}) {
         mutate({
-            variables: this.state,
-            optimisticResponse: {
-              createRepository: {
-                repository: {
-                  name: this.state.repoData.name + " optimisitc",
-                  createdAt: new Date(),
-                  description: this.state.repoData.description,
-                  repositoryTopics: {
-                    edges: [],
-                    __typename: "RepositoryTopicConnection"
-                  },
-                  __typename: "Repository",
-                },
-                __typename: "CreateRepositoryPayload",
-              },
-              __typename: "Mutation"
-            },
+            variables: {"repoData": values},
+            optimisticResponse: optimisticResponse(values),
             update: (proxy, {data}) => {
               const prev = proxy.readQuery({
                 query,
@@ -91,7 +71,7 @@ export default class RepositoryAdd extends Component {
                         ...prev.user.repositories.edges,
                         {
                           __typename: "RepositoryEdge",
-                          cursor: "Y3Vyc29yOnYyOpK5MjAxOS0wNy0xNVQxMzozMDo1OSswNDozMM4LvWq9",
+                          cursor: "x",
                           node: data.repository
                         },
                       ]
@@ -101,7 +81,6 @@ export default class RepositoryAdd extends Component {
               })
             }
         })
-        this.setState(this.getInitialState())
     }
   
     render() {
@@ -113,14 +92,19 @@ export default class RepositoryAdd extends Component {
             <Grid.Row>
                 <Grid.Column column='16'>
                 <Segment>
-                <Form onSubmit={(e) => this.handleSubmit(mutate, this.props)}>
-                <Form.Group widths='equal'>
-                    <Form.Input fluid label='repository name' name='name' value={this.state.repoData.name} placeholder='cool-app' onChange={this.handleChange}/>
-                    <Form.Select fluid label='visibialty' name="visibility" value={this.state.repoData.visibility} options={options} placeholder='visibialty' onChange={this.handleChange}/>
-                </Form.Group>
-                <Form.TextArea label='description' name="description" value={this.state.repoData.description} placeholder='Tell us more about your repository...' onChange={this.handleChange}/>
-                <Form.Button fluid color='green'>add</Form.Button>
-                </Form>
+                  <Formik
+                    initialValues= {{name: "", description: "", visibility: "PRIVATE"}}
+                    onSubmit={(values, {setSubmitting}) => {this.handleSubmit(values, mutate, this.props); setSubmitting(false)}}
+                  >{({handleChange, handleSubmit, values, isSubmitting}) => (
+                    <Form onSubmit={handleSubmit}>
+                    <Form.Group widths='equal'>
+                        <Form.Input fluid label='repository name' name='name' value={values.name} placeholder='cool-app' onChange={handleChange }/>
+                        <Form.Select fluid label='visibialty' name="visibility" value={values.visibility} options={options} placeholder='visibialty' onChange={handleChange }/>
+                    </Form.Group>
+                    <Form.TextArea label='description' name="description" value={values.description} placeholder='Tell us more about your repository...' onChange={handleChange }/>
+                    <Form.Button disabled={isSubmitting} fluid color='green'>add</Form.Button>
+                    </Form>
+                  )}</Formik>
                 </Segment>
                 </Grid.Column>
                 </Grid.Row>

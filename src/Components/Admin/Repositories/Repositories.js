@@ -4,7 +4,6 @@ import gql from 'graphql-tag'
 import Repository from './Repository';
 import {Loader,Card,Header, Grid, Icon, Button} from 'semantic-ui-react';
 import RepositoryAdd from './RepositoryAdd'
-import {Link} from 'react-router-dom'
 
 const GET_REPOSITORIES =
 gql`query Reporistories($login: String!, $max_count: Int!, $after: String, $order_by: RepositoryOrder) {
